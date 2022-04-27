@@ -33,24 +33,27 @@ function stockCheck(id) {
 function outOfStockChecker(...id) {
 	const regex = /^[\d]{4}(-[\d]{4}){3}$/gm;
 	const unique = [...new Set(id)];
-	const outOfStock = [];
+	const outOfStock = [], invalid = [];
 	const result = { outOfStock };
 
-	const setError = (code = '', products = []) => {
-		result.error = { code, products };
+	const setError = (code = '', product = '') => {
+		invalid.push(product);
+		result.error = { code, invalid };
 	};
 
-	Promise.all(unique?.map((product) => {
-		regex.test(product)
-			? stockCheck(product)
-					.then((res) => outOfStock.push(res.id))
-					.catch((err) => setError(err.code))
-			: setError('invalid-format', [product]);
-	}))
+	Promise.all(
+		unique?.map((product) => {
+			regex.test(product)
+				? stockCheck(product)
+						.then((res) => outOfStock.push(res.id))
+						.catch((err) => setError(err.code, product))
+				: setError('invalid-format', product);
+		})
+	);
 
-  return result
+	return result;
 }
 
-outOfStockChecker('8888-8888-8888-8888', '1111', 'aaaa-1111-1111-1111')
+outOfStockChecker('8888-8888-8888-8888', '1111', 'aaaa-1111-1111-1111');
 
 module.exports = outOfStockChecker;
